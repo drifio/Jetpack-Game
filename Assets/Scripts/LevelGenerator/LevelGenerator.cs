@@ -33,9 +33,8 @@ public class LevelGenerator : MonoBehaviour {
 
         // Create the spawn room
         GameObject spawnRoom = Instantiate(LevelSet.SpawnComponent[spawn].gameObject, componentSpawnLocation, Quaternion.identity);
-        // Add the height of the room to the spawn location
-        componentSpawnLocation += new Vector3(0f, 29f, 0f);
         LevelComponent levelComponent = spawnRoom.GetComponent<LevelComponent>();
+        componentSpawnLocation = new Vector3(0f, componentSpawnLocation.y + GetComponentHeight(levelComponent), 0f);
 
         // Add the room to the component list
         levelComponents.Add(levelComponent);
@@ -53,14 +52,18 @@ public class LevelGenerator : MonoBehaviour {
     {
         // Select a random component from the set
         GameObject newComponent = Instantiate(LevelSet.CommonComponents[Random.Range(0, LevelSet.CommonComponents.Count)].gameObject, componentSpawnLocation, Quaternion.identity);
-        componentSpawnLocation += new Vector3(0f, 29f, 0f);
         LevelComponent levelComponent = newComponent.GetComponent<LevelComponent>();
+        componentSpawnLocation = new Vector3(0f, componentSpawnLocation.y + GetComponentHeight(levelComponent), 0f);
         newComponent.name = "Level Component " + componentCount;
         levelComponents.Add(levelComponent);
         componentCount++;
         yield return null;
     }
 
+    float GetComponentHeight(LevelComponent levelComponent)
+    {
+        return levelComponent.Top.transform.position.y - levelComponent.Bottom.transform.position.y;
+    }
 
     // Update is called once per frame
     void Update () {
