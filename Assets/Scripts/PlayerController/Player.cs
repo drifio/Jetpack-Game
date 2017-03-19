@@ -24,21 +24,21 @@ public class Player : MonoBehaviour {
         }
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider collider)
     {
         // Check to see if we've collided with a collectable and, if so, destroy it and increment the score
-        if (collision.collider.tag == "Collectable")
+        if (collider.tag == "Collectable")
         {
-            Destroy(collision.gameObject);
+            Destroy(collider.gameObject);
             score++;
-            Debug.Log("Score is" + score);
+            Debug.Log("Score is: " + score);
         }
     }
 
-    private void OnCollisionStay(Collision collision)
+    private void OnTriggerStay(Collider collider)
     {
         // Check to see if we've collied with something that hurts and, if so, take damage
-        if (collision.collider.tag == "Harm" && !invincible)
+        if (collider.tag == "Harm" && !invincible)
         {
             StartCoroutine(TakeDamage());
         }
