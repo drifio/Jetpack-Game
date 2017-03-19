@@ -4,19 +4,26 @@ using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour {
-    public float speed = 5f;
-    public float jumpVelocity = 400f;
+    public float horizontalAcceleration = 500f;
+    public float horizontalSpeed = 5f;
+    public float maxJumpVelocity = 400f;
     public float jetpackForce = 500f;
-    public float jumpTime = 1f;
+    public float wallJumpForce = 250f;
+    public float maxJumpTime = 1f;
     public float maxUpwardVelocity = 15f;
     public float maxDownwardVelocity = -20f;
+    public int maxFuel = 100;
+    public LayerMask groundMask;
+    public Transform center;
 
     private Rigidbody rigidbody;
-    private int fuel = 100;
+    private int fuel;
     private bool grounded = true;
+    private bool wallJump = false;
 
     private void Awake()
     {
+        fuel = maxFuel;
         rigidbody = GetComponent<Rigidbody>();
     }
 
@@ -25,7 +32,14 @@ public class PlayerController : MonoBehaviour {
         // Check to see if we can jump, and if we are jumping
         if (grounded && Input.GetKeyDown(KeyCode.Space))
         {
-            StartCoroutine(Jump());
+            if (wallJump)
+            {
+                StartCoroutine(WallJump());
+            }
+            else
+            {
+                StartCoroutine(Jump());
+            }
         }
 
         // Jetpack!
@@ -35,27 +49,30 @@ public class PlayerController : MonoBehaviour {
     private void FixedUpdate()
     {
         // Get user input for horizontal movement, turn that into a velocity, then apply it
-        Vector3 input = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, 0f);
-        Vector3 velocity = input * speed * Time.fixedDeltaTime;
-        transform.Translate(velocity);
+        float h = Input.GetAxisRaw("Horizontal");
+        //rigidbody.velocity = new Vector3(h * speed, rigidbody.velocity.y, rigidbody.velocity.z);
+        rigidbody.AddForce(new Vector3(h * horizontalAcceleration, 0f, 0f));
 
         // If we're on the ground, start refueling
         if (grounded)
         {
-            fuel++;
+            fuel = maxFuel;
         }
 
+        // Wall jump check
+        wallJump = OnWallCheck();
+
         // Apply gravity to the player
-        if (!grounded)
+        rigidbody.AddForce(new Vector3(0f, -1500f, 0f) * Time.deltaTime);
+
+        if (wallJump)
         {
-            rigidbody.AddForce(new Vector3(0f, -1500f, 0f) * Time.deltaTime);
-        }
-        else if (grounded)
-        {
-            rigidbody.AddForce(new Vector3(0f, -500f, 0f) * Time.deltaTime);
+            rigidbody.velocity = new Vector3(rigidbody.velocity.x, 0f, rigidbody.velocity.z);
         }
 
         CheckVelocities();
+
+        Debug.DrawRay(center.position, Vector3.left * transform.localScale.x / 2.5f, Color.green);
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -81,11 +98,35 @@ public class PlayerController : MonoBehaviour {
         float time = 0f;
 
         // Check if we're still trying to jump and if we've exceeded the jump time limit
-        while (Input.GetKey(KeyCode.Space) && time <= jumpTime)
+        while (Input.GetKey(KeyCode.Space) && time <= maxJumpTime)
         {
             // Apply the velocity, inverse lerped between 0 and the max jump time for smoother jumping
-            float jumpLerp = 1 - Mathf.InverseLerp(0f, jumpTime, time);
-            rigidbody.velocity = new Vector3(rigidbody.velocity.x, jumpVelocity * jumpLerp, rigidbody.velocity.z);
+            float jumpLerp = 1 - Mathf.InverseLerp(0f, maxJumpTime, time);
+            rigidbody.velocity = new Vector3(rigidbody.velocity.x, maxJumpVelocity * jumpLerp, rigidbody.velocity.z);
+            time += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    private IEnumerator WallJump()
+    {
+        float time = 0f;
+
+        if (Physics.Raycast(center.position, Vector3.left, transform.localScale.x, groundMask))
+        {
+            rigidbody.AddForce(new Vector3(wallJumpForce, 0f, 0f));
+        }
+        else if (Physics.Raycast(center.position, Vector3.right, transform.localScale.x, groundMask))
+        {
+            rigidbody.AddForce(new Vector3(-wallJumpForce, 0f, 0f));
+        }
+
+        // Check if we're still trying to jump and if we've exceeded the jump time limit
+        while (Input.GetKey(KeyCode.Space) && time <= maxJumpTime)
+        {
+            // Apply the velocity, inverse lerped between 0 and the max jump time for smoother jumping
+            float jumpLerp = 1 - Mathf.InverseLerp(0f, maxJumpTime, time);
+            rigidbody.velocity = new Vector3(rigidbody.velocity.x, maxJumpVelocity * jumpLerp, rigidbody.velocity.z);
             time += Time.deltaTime;
             yield return null;
         }
@@ -98,7 +139,7 @@ public class PlayerController : MonoBehaviour {
         {
             // Burn fuel and accelerate upwards
             fuel--;
-            rigidbody.AddForce(new Vector3(0f, jetpackForce, 0f) * Time.deltaTime);
+            rigidbody.AddForce(new Vector3(0f, jetpackForce, 0f));
 
             
         }
@@ -116,5 +157,15 @@ public class PlayerController : MonoBehaviour {
         {
             rigidbody.velocity = new Vector3(rigidbody.velocity.x, maxDownwardVelocity, rigidbody.velocity.z);
         }
+
+        if (Mathf.Abs(rigidbody.velocity.x) > horizontalSpeed)
+        {
+            rigidbody.velocity = new Vector3(Mathf.Sign(rigidbody.velocity.x) * horizontalSpeed, rigidbody.velocity.y, rigidbody.velocity.z);
+        }
+    }
+
+    private bool OnWallCheck()
+    {
+        return (Physics.Raycast(center.position, Vector3.left, transform.localScale.x / 2.7f, groundMask) || Physics.Raycast(center.position, Vector3.right, transform.localScale.x / 2.7f, groundMask));
     }
 }
