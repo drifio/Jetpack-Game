@@ -8,7 +8,8 @@ public class PlayerController : MonoBehaviour {
     public float jumpVelocity = 400f;
     public float jetpackForce = 500f;
     public float jumpTime = 1f;
-    public float maxJetVelocity = 1f;
+    public float maxUpwardVelocity = 15f;
+    public float maxDownwardVelocity = -20f;
 
     private Rigidbody rigidbody;
     private int fuel = 100;
@@ -27,6 +28,7 @@ public class PlayerController : MonoBehaviour {
             StartCoroutine(Jump());
         }
 
+        // Jetpack!
         Jetpack();
     }
 
@@ -42,6 +44,18 @@ public class PlayerController : MonoBehaviour {
         {
             fuel++;
         }
+
+        // Apply gravity to the player
+        if (!grounded)
+        {
+            rigidbody.AddForce(new Vector3(0f, -1500f, 0f) * Time.deltaTime);
+        }
+        else if (grounded)
+        {
+            rigidbody.AddForce(new Vector3(0f, -500f, 0f) * Time.deltaTime);
+        }
+
+        CheckVelocities();
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -86,11 +100,21 @@ public class PlayerController : MonoBehaviour {
             fuel--;
             rigidbody.AddForce(new Vector3(0f, jetpackForce, 0f) * Time.deltaTime);
 
-            // Check to see if we've exceeded to that max vertical upwards velocity
-            if (rigidbody.velocity.y > maxJetVelocity)
-            {
-                rigidbody.velocity = new Vector3(rigidbody.velocity.x, maxJetVelocity, rigidbody.velocity.z);
-            }
+            
+        }
+    }
+
+    private void CheckVelocities()
+    {
+        // Check to see if we've exceeded the max vertical velocity
+        if (rigidbody.velocity.y > maxUpwardVelocity)
+        {
+            rigidbody.velocity = new Vector3(rigidbody.velocity.x, maxUpwardVelocity, rigidbody.velocity.z);
+        }
+
+        if (rigidbody.velocity.y < maxDownwardVelocity)
+        {
+            rigidbody.velocity = new Vector3(rigidbody.velocity.x, maxDownwardVelocity, rigidbody.velocity.z);
         }
     }
 }
