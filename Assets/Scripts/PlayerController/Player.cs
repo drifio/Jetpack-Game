@@ -26,11 +26,12 @@ public class Player : MonoBehaviour {
 
     private void OnCollisionEnter(Collision collision)
     {
-        // Check to see if we've collided with a collectable and, if so, destroy it and at to the score
+        // Check to see if we've collided with a collectable and, if so, destroy it and increment the score
         if (collision.collider.tag == "Collectable")
         {
             Destroy(collision.gameObject);
             score++;
+            Debug.Log("Score is" + score);
         }
     }
 
