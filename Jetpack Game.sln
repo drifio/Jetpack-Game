@@ -1,12 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2015
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jetpack Game", "Jetpack Game.csproj", "{C9030849-4A2D-4A14-2538-A13A99C10C42}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C9030849-4A2D-4A14-2538-A13A99C10C42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9030849-4A2D-4A14-2538-A13A99C10C42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9030849-4A2D-4A14-2538-A13A99C10C42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9030849-4A2D-4A14-2538-A13A99C10C42}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
