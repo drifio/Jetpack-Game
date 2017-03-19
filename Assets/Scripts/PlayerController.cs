@@ -5,18 +5,14 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour {
     public float speed = 5f;
-    public float jumpForce = 1000f;
+    public float jumpVelocity = 400f;
     public float jetpackForce = 500f;
+    public float jumpTime = 1f;
+    public float maxJetVelocity = 1f;
 
     private Rigidbody rb;
     private int fuel = 100;
-
-    [HideInInspector]
-    public bool jump = false;
-    [HideInInspector]
-    public bool grounded = true;
-    [HideInInspector]
-    public bool jetpackActive = false;
+    private bool grounded = true;
 
     private void Awake()
     {
@@ -25,18 +21,11 @@ public class PlayerController : MonoBehaviour {
 
     private void Update()
     {
-        if (Input.GetKeyUp(KeyCode.Space) && !grounded)
+        if (grounded && Input.GetKeyDown(KeyCode.Space))
         {
-            jetpackActive = true;
+            StartCoroutine(Jump());
         }
-        if (grounded)
-        {
-            Jump();
-        }
-        else if (jetpackActive)
-        {
-            Jetpack();
-        }
+        Jetpack();
     }
 
     private void FixedUpdate()
@@ -68,22 +57,30 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    private void Jump()
+    private IEnumerator Jump()
     {
-        jetpackActive = false;
+        float time = 0f;
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        while (Input.GetKey(KeyCode.Space) && time <= jumpTime)
         {
-            rb.AddForce(new Vector3(0f, jumpForce, 0f));
+            float jumpLerp = 1 - Mathf.InverseLerp(0f, jumpTime, time);
+            rb.velocity = new Vector3(rb.velocity.x, jumpVelocity * jumpLerp, rb.velocity.z);
+            time += Time.deltaTime;
+            yield return null;
         }
     }
 
     private void Jetpack()
     {
-        if (Input.GetKey(KeyCode.Space) && fuel > 0)
+        if (Input.GetKey(KeyCode.W) && fuel > 0)
         {
             fuel--;
-            rb.AddForce(new Vector3(0f, jetpackForce, 0f));
+            rb.AddForce(new Vector3(0f, jetpackForce, 0f) * Time.deltaTime);
+
+            if (rb.velocity.y > maxJetVelocity)
+            {
+                rb.velocity = new Vector3(rb.velocity.x, maxJetVelocity, rb.velocity.z);
+            }
         }
     }
 }
